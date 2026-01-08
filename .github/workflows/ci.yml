@@ -9,32 +9,12 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          fetch-depth: 0
-      
-      - name: Check if there are new commits
-        id: check_commits
-        run: |
-          git fetch origin main staging
-          # Check if staging has commits that main doesn't have
-          if git rev-list --count origin/main..origin/staging > 0; then
-            echo "has_new_commits=true" >> $GITHUB_OUTPUT
-          else
-            echo "has_new_commits=false" >> $GITHUB_OUTPUT
-          fi
-      
+          ref: main
       - name: Reset promotion branch
-        if: steps.check_commits.outputs.has_new_commits == 'true'
         run: |
-          git checkout -b release
-          git reset --hard origin/staging
-      
+          git fetch origin staging:staging
+          git reset --hard staging
       - name: Create Pull Request
-        if: steps.check_commits.outputs.has_new_commits == 'true'
         uses: peter-evans/create-pull-request@v4
         with:
           branch: release
-          title: "Promote staging to main"
-          body: |
-            This PR promotes changes from staging to main.
-            
-            **Note:** Only commits added to staging after the last sync with main are included.
