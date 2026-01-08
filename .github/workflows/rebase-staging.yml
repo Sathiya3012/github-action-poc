@@ -1,0 +1,33 @@
+name: Sync staging after main merge
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+jobs:
+  syncStaging:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Fetch all branches
+        run: git fetch origin
+      
+      - name: Checkout staging
+        run: git checkout staging
+      
+      - name: Merge main into staging
+        run: |
+          git merge origin/main --no-edit -m "chore: sync staging with main after promotional PR merge"
+          git push origin staging
+
